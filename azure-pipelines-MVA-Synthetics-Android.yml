@@ -1,0 +1,371 @@
+# Maven
+# Build your Java project and run tests with Apache Maven.
+# Add steps that analyze code, save build artifacts, deploy, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/java
+pool:
+  vmImage: macos-latest
+
+stages:
+  - stage: ios
+    jobs:
+      - job: ios
+        strategy:
+          matrix:
+            Sub-Switch:
+              MSISDN: 447775357449
+              username: 7062754530
+              AppVersion: 10.45
+              SubscriptionType: MPS
+              Segment: CONSUMER
+              OSVersion: 11.3
+              Journey: "@Sub-Switch"
+              TESTTYPEPIPELINE: "@Synthetics"
+              DEVICE_NAME: iPhone 14 Pro
+              PLATFORM_VERSION: 16
+              Build_Name: Synthetics subswitch iOS
+              Build_Number: Synthetics subswitch iOS
+              password: Testing@1
+            Tobi:
+              MSISDN: 447392634518
+              username: Tobi.uk.testing11@gmail.com
+              AppVersion: 10.45
+              SubscriptionType: MPS
+              Segment: PREPAY
+              OSVersion: 11.3
+              Journey: "@Tobi"
+              TESTTYPEPIPELINE: "@Synthetics"
+              DEVICE_NAME: iPhone 13
+              PLATFORM_VERSION: 15
+              Build_Name: Synthetics Tobi iOS
+              Build_Number: Synthetics Tobi iOS
+              password: Testing@1
+            Upgrade:
+              MSISDN: 447775357449
+              username: 7062754530
+              AppVersion: 10.45
+              SubscriptionType: MPS
+              Segment: CONSUMER
+              OSVersion: 11.3
+              Journey: "@Upgrade"
+              TESTTYPEPIPELINE: "@Synthetics"
+              DEVICE_NAME: iPhone 11 Pro
+              PLATFORM_VERSION: 15
+              Build_Name: Synthetics Upgrade iOS
+              Build_Number: Synthetics Upgrade iOS
+              password: Testing@1
+            Topup:
+              MSISDN: 447392634518
+              username: Tobi.uk.testing11@gmail.com
+              AppVersion: 10.45
+              SubscriptionType: MPS
+              Segment: PREPAY
+              OSVersion: 11.3
+              Journey: "@Top_up"
+              TESTTYPEPIPELINE: "@Synthetics"
+              DEVICE_NAME: iPhone 14 Pro
+              PLATFORM_VERSION: 16
+              Build_Name: Synthetics Top-up iOS
+              Build_Number: Synthetics Top-up iOs
+              password: Testing@1
+            Discover:
+              MSISDN: 447392634518
+              username: Tobi.uk.testing11@gmail.com
+              AppVersion: 10.45
+              SubscriptionType: MPS
+              Segment: PREPAY
+              OSVersion: 11.3
+              Journey: "@Discover"
+              TESTTYPEPIPELINE: "@Synthetics"
+              DEVICE_NAME: iPhone 14 Pro
+              PLATFORM_VERSION: 16
+              Build_Name: Synthetics Discover iOS
+              Build_Number: Synthetics Discover iOS
+              password: Testing@1
+            Tariff-Migration:
+              MSISDN: 447470332301
+              username: 7060150614
+              AppVersion: 10.45
+              SubscriptionType: MPS
+              Segment: CONSUMER
+              OSVersion: 11.3
+              Journey: "@Tariff_Migration"
+              TESTTYPEPIPELINE: "@Synthetics"
+              DEVICE_NAME: iPhone 11 Pro
+              PLATFORM_VERSION: 15
+              Build_Name: Synthetics Tarrif iOS
+              Build_Number: Synthetics Tarrif iOS
+              password: Testing@1
+            VeryMe:
+              MSISDN: 447392634518
+              username: Tobi.uk.testing11@gmail.com
+              AppVersion: 10.45
+              SubscriptionType: MPS
+              Segment: PREPAY
+              OSVersion: 11.3
+              Journey: "@Veryme"
+              TESTTYPEPIPELINE: "@Synthetics"
+              DEVICE_NAME: iPhone 14 Pro
+              PLATFORM_VERSION: 16
+              Build_Name: Synthetics Veryme iOS
+              Build_Number: Synthetics Veryme iOS
+              password: Testing@1
+            C2U:
+              MSISDN: 447775357449
+              username: 7062754530
+              AppVersion: 10.45
+              SubscriptionType: MPS
+              Segment: CONSUMER
+              OSVersion: 11.3
+              Journey: "@C2U"
+              TESTTYPEPIPELINE: "@Synthetics"
+              DEVICE_NAME: iPhone 13
+              PLATFORM_VERSION: 15
+              Build_Name: Synthetics C2U iOS
+              Build_Number: Synthetics C2U iOS
+              password: Testing@1
+            Billing:
+              MSISDN: 447775357449
+              username: 7062754530
+              AppVersion: 10.42
+              SubscriptionType: MPS
+              Segment: CONSUMER
+              OSVersion: 11.3
+              Journey: "@Billing"
+              TESTTYPEPIPELINE: "@Synthetics"
+              DEVICE_NAME: iPhone 14 Pro
+              PLATFORM_VERSION: 16
+              Build_Name: Synthetics Billing iOS
+              Build_Number: Synthetics Billing iOS
+              password: Testing@1
+          maxParallel: 1
+        workspace:
+          clean: all
+        condition: eq(variables['Build.Reason'], 'Schedule')
+        timeoutInMinutes: 200
+        displayName: iOS Run
+        steps:
+          - checkout: self
+            fetchDepth: 1
+            clean: true
+          - task: NodeTool@0
+            displayName: Setup Node
+            inputs:
+              versionSpec: 10.x
+          - task: Bash@3
+            displayName: Setup Bash Script
+            inputs:
+              targetType: inline
+              script: >-
+                npm install -g appium@1.19.1
+
+                npm install wd
+
+                appium&
+
+                npm install -g allure-commandline
+
+                npm install bestzip -g
+          - task: JavaToolInstaller@0
+            inputs:
+              versionSpec: '17'
+              jdkArchitectureOption: 'x64'
+              jdkSourceOption: 'PreInstalled'
+          - task: CmdLine@2
+            displayName: Test Run
+            inputs:
+              script: >
+                echo "$(AppVersion)"
+
+                mvn clean install -Dcucumber.filter.tags="$(TESTTYPEPIPELINE) and $(Journey)" -DSERVER="live" -DPLATFORM="ios" -DMSISDN="$(MSISDN)" -DUFL="wifi" -DREMOTE="false" -Durl="https://mvax.vodafone.co.uk" -Dusername="$(username)" -Dpassword="$(password)" -DSubscriptionType="$(SubscriptionType)" -DSegment="$(Segment)" -DAppVersion="$(AppVersion)" -DOSVersion="$(OSVersion)" -DUnknownUser="true" -DDEVICE_NAME="$(DEVICE_NAME)" -DPLATFORM_VERSION="$(PLATFORM_VERSION)" -DbrowserStackRun="True" -DbrowserStackUserName="nehalabdelwahab_dGV9p0" -DbrowserStackAccessKey="jaFscKqrqdQhVjkkUBgM" -DbuildName="$(Build_Name)" -Dpassword="Testing@1" -DbuildNumber="$(Build_Number)" -DisLiveTest="true"
+
+          - task: PublishTestResults@2
+            inputs:
+              testResultsFormat: 'JUnit'
+              testResultsFiles: 'Cucumber.xml'
+              searchFolder: '$(System.DefaultWorkingDirectory)'
+              testRunTitle: 'MVA App Automation Run'
+              publishRunAttachments: true
+              failTaskOnFailedTests: true
+
+  - stage: android
+    condition: in(dependencies.ios.result, 'Succeeded', 'SucceededWithIssues', 'Skipped' , 'Failed')
+    jobs:
+      - job: android
+        strategy:
+          matrix:
+            Sub-Switch:
+              MSISDN: 447775357449
+              username: 7062754530
+              AppVersion: 10.45
+              SubscriptionType: MPS
+              Segment: CONSUMER
+              OSVersion: 11.3
+              Journey: "@Sub-Switch"
+              TESTTYPEPIPELINE: "@Synthetics"
+              DEVICE_NAME: Google Pixel 7
+              PLATFORM_VERSION: 13.0
+              Build_Name: Synthetics subswitch Android
+              Build_Number: Synthetics subswitch Android
+              password: Testing@1
+            Tobi:
+              MSISDN: 447392634518
+              username: Tobi.uk.testing11@gmail.com
+              AppVersion: 10.45
+              SubscriptionType: MPS
+              Segment: PREPAY
+              OSVersion: 11.3
+              Journey: "@Tobi"
+              TESTTYPEPIPELINE: "@Synthetics"
+              DEVICE_NAME: Google Pixel 4
+              PLATFORM_VERSION: 11.0
+              Build_Name: Synthetics Tobi Android
+              Build_Number: Synthetics Tobi Android
+              password: Testing@1
+            Upgrade:
+              MSISDN: 447775357449
+              username: 7062754530
+              AppVersion: 10.45
+              SubscriptionType: MPS
+              Segment: CONSUMER
+              OSVersion: 11.3
+              Journey: "@Upgrade"
+              TESTTYPEPIPELINE: "@Synthetics"
+              DEVICE_NAME: Samsung Galaxy S22 Ultra
+              PLATFORM_VERSION: 12.0
+              Build_Name: Synthetics Upgrade Android
+              Build_Number: Synthetics Upgrade Android
+              password: Testing@1
+            Topup:
+              MSISDN: 447392634518
+              username: Tobi.uk.testing11@gmail.com
+              AppVersion: 10.45
+              SubscriptionType: MPS
+              Segment: PREPAY
+              OSVersion: 11.3
+              Journey: "@Top_up"
+              TESTTYPEPIPELINE: "@Synthetics"
+              DEVICE_NAME: Google Pixel 4
+              PLATFORM_VERSION: 11.0
+              Build_Name: Synthetics Top-up Android
+              Build_Number: Synthetics Top-up Android
+              password: Testing@1
+            Discover:
+              MSISDN: 447392634518
+              username: Tobi.uk.testing11@gmail.com
+              AppVersion: 10.45
+              SubscriptionType: MPS
+              Segment: PREPAY
+              OSVersion: 11.3
+              Journey: "@Discover"
+              TESTTYPEPIPELINE: "@Synthetics"
+              DEVICE_NAME: Samsung Galaxy S22 Ultra
+              PLATFORM_VERSION: 12.0
+              Build_Name: Synthetics Discover Android
+              Build_Number: Synthetics Discover Android
+              password: Testing@1
+            Tariff-Migration:
+              MSISDN: 447919377519
+              username: 7060150614
+              AppVersion: 10.45
+              SubscriptionType: MPS
+              Segment: CONSUMER
+              OSVersion: 11.3
+              Journey: "@Tariff_Migration"
+              TESTTYPEPIPELINE: "@Synthetics"
+              DEVICE_NAME: Google Pixel 6
+              PLATFORM_VERSION: 12.0
+              Build_Name: Synthetics Tarrif Android
+              Build_Number: Synthetics Tarrif Android
+              password: Testing@1
+            VeryMe:
+              MSISDN: 447392634518
+              username: Tobi.uk.testing11@gmail.com
+              AppVersion: 10.45
+              SubscriptionType: MPS
+              Segment: PREPAY
+              OSVersion: 11.3
+              Journey: "@Veryme"
+              TESTTYPEPIPELINE: "@Synthetics"
+              DEVICE_NAME: Google Pixel 7
+              PLATFORM_VERSION: 13.0
+              Build_Name: Synthetics Veryme Android
+              Build_Number: Synthetics Veryme Android
+              password: Testing@1
+            C2U:
+              MSISDN: 447775357449
+              username: 7062754530
+              AppVersion: 10.45
+              SubscriptionType: MPS
+              Segment: CONSUMER
+              OSVersion: 11.3
+              Journey: "@C2U"
+              TESTTYPEPIPELINE: "@Synthetics"
+              DEVICE_NAME: Google Pixel 6
+              PLATFORM_VERSION: 12.0
+              Build_Name: Synthetics C2U Android
+              Build_Number: Synthetics C2U Android
+              password: Testing@1
+            Billing:
+              MSISDN: 447775357449
+              username: 7062754530
+              AppVersion: 10.45
+              SubscriptionType: MPS
+              Segment: CONSUMER
+              OSVersion: 11.3
+              Journey: "@Billing"
+              TESTTYPEPIPELINE: "@Synthetics"
+              DEVICE_NAME: Samsung Galaxy S22 Ultra
+              PLATFORM_VERSION: 12.0
+              Build_Name: Synthetics Billing Android
+              Build_Number: Synthetics Billing Android
+              password: Testing@1
+          maxParallel: 1
+        workspace:
+          clean: all
+        condition: eq(variables['Build.Reason'], 'Schedule')
+        timeoutInMinutes: 200
+        displayName: Android Run
+        steps:
+          - checkout: self
+            fetchDepth: 1
+            clean: true
+          - task: NodeTool@0
+            displayName: Setup Node
+            inputs:
+              versionSpec: 10.x
+          - task: Bash@3
+            displayName: Setup Bash Script
+            inputs:
+              targetType: inline
+              script: >-
+                npm install -g appium@1.19.1
+
+                npm install wd
+
+                appium&
+
+                npm install -g allure-commandline
+
+                npm install bestzip -g
+          - task: JavaToolInstaller@0
+            inputs:
+              versionSpec: '17'
+              jdkArchitectureOption: 'x64'
+              jdkSourceOption: 'PreInstalled'
+          - task: CmdLine@2
+            displayName: Test Run
+            inputs:
+              script: >
+                echo "$(AppVersion)"
+
+                mvn clean install -Dcucumber.filter.tags="$(TESTTYPEPIPELINE) and $(Journey)" -DSERVER="live" -DPLATFORM="android" -DMSISDN="$(MSISDN)" -DUFL="wifi" -DREMOTE="false" -Durl="https://mvax.vodafone.co.uk" -Dusername="$(username)" -Dpassword="$(password)" -DSubscriptionType="$(SubscriptionType)" -DSegment="$(Segment)" -DAppVersion="$(AppVersion)" -DOSVersion="$(OSVersion)" -DUnknownUser="true" -DDEVICE_NAME="$(DEVICE_NAME)" -DPLATFORM_VERSION="$(PLATFORM_VERSION)" -DbrowserStackRun="True" -DbrowserStackUserName="nehalabdelwahab_dGV9p0" -DbrowserStackAccessKey="jaFscKqrqdQhVjkkUBgM" -DbuildName="$(Build_Name)" -Dpassword="Testing@1" -DbuildNumber="$(Build_Number)" -DisLiveTest="true"
+
+          - task: PublishTestResults@2
+            inputs:
+              testResultsFormat: 'JUnit'
+              testResultsFiles: 'Cucumber.xml'
+              searchFolder: '$(System.DefaultWorkingDirectory)'
+              testRunTitle: 'MVA App Automation Run'
+              publishRunAttachments: true
+              failTaskOnFailedTests: true
+

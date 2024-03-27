@@ -1,0 +1,404 @@
+# Maven
+# Build your Java project and run tests with Apache Maven.
+# Add steps that analyze code, save build artifacts, deploy, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/java
+pool:
+  vmImage: macos-latest
+
+parameters:
+  - name: MSISDN
+    displayName: MSISDN
+    type: string
+    default: 447386011183
+  - name: SERVER
+    displayName: SERVER
+    type: string
+    default: QC1
+    values:
+      - QC1
+      - QC2
+      - QCX
+      - INT1
+      - PRODSUP
+  - name: UFL
+    displayName: UFL
+    type: string
+    default: 3G
+    values:
+      - 3G
+      - WIFI
+  - name: username
+    displayName: Username
+    type: string
+    default: AUT7000368891
+  - name: password
+    displayName: Password
+    type: string
+    default: testing1
+  - name: APIURL
+    displayName: API URL
+    type: string
+    default: https://mvax.dx-qcx-common.digital.vodafoneaws.co.uk
+    values:
+      - https://mvax.dx-qcx-common.digital.vodafoneaws.co.uk
+      - https://mvax.dx-qc1-common.digital.vodafoneaws.co.uk
+      - https://mvax.dx-prodsup-common.digital.vodafoneaws.co.uk
+      - https://mvax.dx-qc2-common.digital.vodafoneaws.co.uk
+      - https://mvax.dx-int1-common.digital.vodafoneaws.co.uk
+      - https://mvax.vodafone.co.uk
+  - name: accountId
+    displayName: Account Id
+    type: string
+    default: 7000368891
+  - name: SubscriptionType
+    displayName: Subscription Type
+    type: string
+    default: MPS
+    values:
+      - MPS
+      - MBB
+      - FLN
+      - BB
+  - name: Segment
+    displayName: Segment
+    type: string
+    default: CONSUMER
+    values:
+      - CONSUMER
+      - PREPAY
+      - SMB
+      - SOLETRADER
+  - name: ReinventServer
+    displayName: Reinvent Server
+    type: string
+    default: false
+    values:
+      - true
+      - false
+  - name: TCC
+    displayName: TCC
+    type: string
+    default: TCC6
+  - name: NeedTcc
+    displayName: Need TCC
+    type: string
+    default: false
+    values:
+      - true
+      - false
+  - name: FirstName
+    displayName: FirstName
+    type: string
+    default: MVA
+  - name: LastName
+    displayName: LastName
+    type: string
+    default: CP Testing
+  - name: DeviceUID
+    displayName: DeviceUID
+    type: string
+    default: fe63c741-0e49-49a9-bc9c-4d4e78a00eee
+  - name: AppVersion
+    displayName: App Version
+    type: string
+    default: 10.35
+  - name: OSVersion
+    displayName: OS Version
+    type: string
+    default: 11.3
+  - name: USERTYPEPIPELINE
+    displayName: User Type Pipeline
+    type: string
+    default: "@PAYG"
+    values:
+      - "@MPS"
+      - "@MBB"
+      - "@SMB"
+      - "@SOLETRADER"
+      - "@PAYG"
+      - "@RED"
+      - "@BVB"
+      - "@BINGO"
+      - "@PAYM"
+      - "@PAYG1"
+      - "@UNKNOWN_USER"
+  - name: TESTTYPEPIPELINE
+    displayName: Test Type Pipeline
+    type: string
+    default: "@REGRESSION"
+    values:
+      - "@REGRESSION"
+      - "@SANITY"
+      - "@paygDVT"
+      - "@paymDVT"
+      - "@childDVT"
+      - "@CCS"
+  - name: UFLTAGPIPELINE
+    displayName: UFL Type Pipeline
+    type: string
+    default: "@3G"
+    values:
+      - "@3G"
+      - "@WIFI"
+  - name: LOGINPIPELINE
+    displayName: Login Condition Pipeline
+    type: string
+    default: "not @LOGIN"
+    values:
+      - "not @LOGIN"
+      - "@LOGIN"
+  - name: DXIDMPIPELINE
+    displayName: DXIDM Condition Pipeline
+    type: string
+    default: "not @DXIDM"
+    values:
+      - "not @DXIDM"
+      - "@DXIDM"
+  - name: SPECIALPIPELINE
+    displayName: SPECIAL Condition Pipeline
+    type: string
+    default: "not @Special"
+    values:
+      - "not @Special"
+      - "@Special"
+  - name: UNKNOWN
+    displayName: UNKNOWN user
+    type: string
+    default: false
+    values:
+      - false
+      - true
+  - name: DEVICE_NAME
+    displayName: Device name
+    type: string
+    default: iPhone 14
+  - name: PLATFORM_VERSION
+    displayName: OS version
+    type: string
+    default: 16
+  - name: BSUserName
+    displayName: Browser Stack User Name
+    type: string
+    default: ahmedabdelhamid_ghV9Qa
+  - name: BSAccessKey
+    displayName: Browser Stack Access Key
+    type: string
+    default: zpDVWq97BULmuqtiwW9x
+  - name: BSAppURl
+    displayName: Browser Stack App URL
+    type: string
+    default: bs://479c3684eb43c0c7fe7cd21aeb98266c1de463fd
+  - name: BSBuildName
+    displayName: Browser Stack Build Name
+    type: string
+    default: build name
+  - name: BSBuildNumber
+    displayName: Browser Stack Build Number
+    type: string
+    default: build name
+  - name: PLisLiveTest
+    displayName: Production Flag
+    type: string
+    default: false
+    values:
+      - false
+      - true
+stages:
+  - stage:
+    jobs:
+      - job:
+        workspace:
+          clean: all
+        condition: eq(variables['Build.Reason'], 'Manual')
+        timeoutInMinutes: 200
+        displayName: iOS Run
+        steps:
+          - checkout: self
+            fetchDepth: 1
+            clean: true
+          - task: NodeTool@0
+            displayName: Setup Node
+            inputs:
+              versionSpec: 10.x
+          - task: Bash@3
+            displayName: Setup Bash Script
+            inputs:
+              targetType: inline
+              script: >-
+                npm install -g appium@1.19.1
+
+                npm install wd
+
+                appium&
+
+                npm install -g allure-commandline
+
+                npm install bestzip -g
+          - task: JavaToolInstaller@0
+            inputs:
+              versionSpec: '17'
+              jdkArchitectureOption: 'x64'
+              jdkSourceOption: 'PreInstalled'
+          - task: CmdLine@2
+            displayName: Test Run
+            inputs:
+              script: >
+                mvn clean install -Dcucumber.filter.tags="${{ parameters.TESTTYPEPIPELINE }} and ${{ parameters.USERTYPEPIPELINE }} and ${{ parameters.UFLTAGPIPELINE }} and ${{ parameters.LOGINPIPELINE }} and ${{ parameters.DXIDMPIPELINE }} and ${{ parameters.SPECIALPIPELINE }}" -DSERVER="${{ parameters.SERVER }}" -DPLATFORM="ios" -DMSISDN="${{ parameters.MSISDN }}" -DUFL="${{ parameters.UFL }}" -DREMOTE="false" -Durl="${{ parameters.APIURL }}" -Dusername="${{ parameters.username }}" -Dpassword="${{ parameters.password }}" -DaccountId="${{ parameters.accountId }}" -DSubscriptionType="${{ parameters.SubscriptionType }}" -DSegment="${{ parameters.Segment }}" -DReinventServer="${{ parameters.ReinventServer }}" -DTCC="${{ parameters.TCC }}" -DNeedTcc="${{ parameters.NeedTcc }}" -DAppVersion="${{ parameters.AppVersion }}" -DOSVersion="${{ parameters.OSVersion }}" -DUnknownUser="${{ parameters.UNKNOWN }}" -DDEVICE_NAME="${{ parameters.DEVICE_NAME }}" -DPLATFORM_VERSION="${{ parameters.PLATFORM_VERSION }}" -DbrowserStackRun="True" -DbrowserStackUserName="${{ parameters.BSUserName }}" -DbrowserStackAccessKey="${{ parameters.BSAccessKey }}" -DappUrl="${{ parameters.BSAppURl }}" -DbuildName="${{ parameters.BSBuildName }}" -DbuildNumber="${{ parameters.BSBuildNumber }}" -DisLiveTest="${{ parameters.PLisLiveTest }}"  -DFirstName="${{ parameters.FirstName }}" -DLastName="${{ parameters.LastName }}" -DDeviceUID="${{ parameters.DeviceUID }}"
+
+
+
+  - stage:
+    jobs:
+      - job: Build
+        strategy:
+          matrix:
+            MPS_3G_NOTLOGIN:
+              MSISDN: 447876005681
+              UFL: 3G
+              SERVER: qc1
+              username: NEW_7051070263
+              accountId: 7051070263
+              AppVersion: 10.39
+              SubscriptionType: MPS
+              Segment: CONSUMER
+              Reinvent_Server: false
+              TCC: TCC7
+              Need_Tcc: false
+              APIURL: https://mvax.dx-qc1-common.digital.vodafoneaws.co.uk
+              OSVersion: 11
+              USERTYPEPIPELINE: "@MPS"
+              TESTTYPEPIPELINE: "@REGRESSION"
+              UFLTAGPIPELINE: "@3G"
+              DXIDMPIPELINE: "not @DXIDM"
+              LOGINPIPELINE: "not @LOGIN"
+              SPECIALPIPELINE: "not @Special"
+              UNKNOWN: false
+              DEVICE_NAME: iPhone 14
+              PLATFORM_VERSION: 16
+              Build_Number: MPS not LOGIN
+            PAYG_3G_NOTLOGIN:
+              MSISDN: 447386010704
+              UFL: 3G
+              SERVER: qc1
+              username: DNU_7000298476
+              accountId: 7000298476
+              AppVersion: 10.39
+              SubscriptionType: MPS
+              Segment: PREPAY
+              Reinvent_Server: false
+              TCC: TCC7
+              Need_Tcc: false
+              APIURL: https://mvax.dx-qc1-common.digital.vodafoneaws.co.uk
+              OSVersion: 11
+              USERTYPEPIPELINE: "@PAYG"
+              TESTTYPEPIPELINE: "@REGRESSION"
+              UFLTAGPIPELINE: "@3G"
+              DXIDMPIPELINE: "not @DXIDM"
+              LOGINPIPELINE: "not @LOGIN"
+              SPECIALPIPELINE: "not @Special"
+              UNKNOWN: false
+              DEVICE_NAME: iPhone 14
+              PLATFORM_VERSION: 16
+              Build_Number: PAYG
+            MBB_3G_NOTLOGIN:
+              MSISDN: 447741736406
+              UFL: 3G
+              SERVER: qc1
+              username: AUT7000336104
+              accountId: 7000336104
+              AppVersion: 10.39
+              SubscriptionType: MBB
+              Segment: SMB
+              Reinvent_Server: false
+              TCC: TCC7
+              Need_Tcc: false
+              APIURL: https://mvax.dx-qc1-common.digital.vodafoneaws.co.uk
+              OSVersion: 11
+              USERTYPEPIPELINE: "@MBB"
+              TESTTYPEPIPELINE: "@REGRESSION"
+              UFLTAGPIPELINE: "@3G"
+              DXIDMPIPELINE: "not @DXIDM"
+              LOGINPIPELINE: "not @LOGIN"
+              SPECIALPIPELINE: "not @Special"
+              UNKNOWN: false
+              DEVICE_NAME: iPhone 14
+              PLATFORM_VERSION: 16
+              Build_Number: MBB not LOGIN
+            MPS_3G_LOGIN:
+              MSISDN: 447876005681
+              UFL: 3G
+              SERVER: qc1
+              username: NEW_7051070263
+              accountId: 7051070263
+              AppVersion: 10.39
+              SubscriptionType: MPS
+              Segment: CONSUMER
+              Reinvent_Server: true
+              TCC: TCC7
+              Need_Tcc: true
+              APIURL: https://mvax.dx-qc1-common.digital.vodafoneaws.co.uk
+              OSVersion: 11
+              USERTYPEPIPELINE: "@MPS"
+              TESTTYPEPIPELINE: "@REGRESSION"
+              UFLTAGPIPELINE: "@3G"
+              DXIDMPIPELINE: "not @DXIDM"
+              LOGINPIPELINE: "@LOGIN"
+              SPECIALPIPELINE: "not @Special"
+              UNKNOWN: false
+              DEVICE_NAME: iPhone 14
+              PLATFORM_VERSION: 16
+              Build_Number: MPS LOGIN
+          maxParallel: 2
+        workspace:
+          clean: all
+        condition: eq(variables['Build.Reason'], 'Schedule')
+        timeoutInMinutes: 200
+        displayName: iOS Run
+        steps:
+          - checkout: self
+            fetchDepth: 1
+            clean: true
+          - task: NodeTool@0
+            displayName: Setup Node
+            inputs:
+              versionSpec: 10.x
+          - task: Bash@3
+            displayName: Setup Bash Script
+            inputs:
+              targetType: inline
+              script: >-
+                npm install -g appium@1.19.1
+
+                npm install wd
+
+                appium&
+
+                npm install -g allure-commandline
+
+                npm install bestzip -g
+          - task: JavaToolInstaller@0
+            inputs:
+              versionSpec: '17'
+              jdkArchitectureOption: 'x64'
+              jdkSourceOption: 'PreInstalled'
+          - task: CmdLine@2
+            displayName: Test Run
+            inputs:
+              script: >
+
+                mvn clean install -Dcucumber.filter.tags="$(TESTTYPEPIPELINE) and $(USERTYPEPIPELINE) and $(UFLTAGPIPELINE) and $(LOGINPIPELINE) and $(DXIDMPIPELINE) and $(SPECIALPIPELINE)" -DSERVER="$(SERVER)" -DPLATFORM="iOS" -DMSISDN="$(MSISDN)" -DUFL="$(UFL)" -DREMOTE="false" -Durl="$(APIURL)" -Dusername="$(username)" -DaccountId="$(accountId)" -DLOA3AccountId="$(accountId)" -DSubscriptionType="$(SubscriptionType)" -DSegment="$(Segment)" -DReinventServer="$(ReinventServer)" -DTCC="$(TCC)" -DNeedTcc="$(NeedTcc)" -DAppVersion="$(AppVersion)" -DOSVersion="$(OSVersion)" -DUnknownUser="$(UNKNOWN)" -DDEVICE_NAME="$(DEVICE_NAME)" -DPLATFORM_VERSION="$(PLATFORM_VERSION)" -DbrowserStackRun="True" -DbrowserStackUserName="yarahelal_XQJnIN" -DbrowserStackAccessKey="R9vAwdw5zpizUCRi2zVq" -DappUrl="bs://8acacd82c7d256cf64ed2d6d8ebdd93ed2c0462d" -DbuildName="Scheduled run iOS 39" -Dpassword="testing1" -DbuildNumber="$(Build_Number)"
+
+          - task: PublishTestResults@2
+            inputs:
+              testResultsFormat: 'JUnit'
+              testResultsFiles: 'Cucumber.xml'
+              searchFolder: '$(System.DefaultWorkingDirectory)'
+              testRunTitle: 'MVA App Automation Run'
+              publishRunAttachments: true
+
+schedules:
+  - cron: "40 14 8 2 3"
+    displayName: Daily Morning Run
+    branches:
+      include:
+        - Release/R30

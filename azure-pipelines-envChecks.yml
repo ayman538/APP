@@ -1,0 +1,329 @@
+# Maven
+# Build your Java project and run tests with Apache Maven.
+# Add steps that analyze code, save build artifacts, deploy, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/java
+pool:
+  vmImage: macos-latest
+
+    - stage:
+        jobs:
+          - job: sanityChecks
+            strategy:
+              matrix:
+                MPS_3G_NOTLOGIN:
+                  MSISDN: 447876005681
+                  UFL: 3G
+                  SERVER: qc1
+                  username: NEW_7051070263
+                  accountId: 7051070263
+                  AppVersion: 10.39
+                  SubscriptionType: MPS
+                  Segment: CONSUMER
+                  Reinvent_Server: false
+                  TCC: TCC7
+                  Need_Tcc: false
+                  APIURL: https://mvax.dx-qc1-common.digital.vodafoneaws.co.uk
+                  OSVersion: 11.3
+                  USERTYPEPIPELINE: "@MPS"
+                  TESTTYPEPIPELINE: "@REGRESSION"
+                  UFLTAGPIPELINE: "@3G"
+                  DXIDMPIPELINE: "not@DXIDM"
+                  LOGINPIPELINE: "not@LOGIN"
+                  UNKNOWN: false
+                  SPECIALPIPELINE: "not@Special"
+                  DEVICE_NAME: OnePlus9
+                  PLATFORM_VERSION: 11.0
+                  Build_Number: MPSnotLOGIN
+                  PLisLiveTest: false
+                PAYG_3G_NOTLOGIN:
+                  MSISDN: 447386010704
+                  UFL: 3G
+                  SERVER: qc1
+                  username: DNU_7000298476
+                  accountId: 7000298476
+                  AppVersion: 10.39
+                  SubscriptionType: MPS
+                  Segment: PREPAY
+                  Reinvent_Server: false
+                  TCC: TCC7
+                  Need_Tcc: false
+                  APIURL: https://mvax.dx-qc1-common.digital.vodafoneaws.co.uk
+                  OSVersion: 11.3
+                  USERTYPEPIPELINE: "@PAYG"
+                  TESTTYPEPIPELINE: "@REGRESSION"
+                  UFLTAGPIPELINE: "@3G"
+                  DXIDMPIPELINE: "not@DXIDM"
+                  LOGINPIPELINE: "not@LOGIN"
+                  UNKNOWN: false
+                  SPECIALPIPELINE: "not@Special"
+                  DEVICE_NAME: SamsungGalaxyS21Ultra
+                  PLATFORM_VERSION: 11.0
+                  Build_Number: PAYG
+                  PLisLiveTest: false
+                MBB_3G_NOTLOGIN:
+                  MSISDN: 447741736406
+                  UFL: 3G
+                  SERVER: qc1
+                  username: AUT7000336104
+                  accountId: 7000336104
+                  AppVersion: 10.39
+                  SubscriptionType: MBB
+                  Segment: SMB
+                  Reinvent_Server: false
+                  TCC: TCC7
+                  Need_Tcc: false
+                  APIURL: https://mvax.dx-qc1-common.digital.vodafoneaws.co.uk
+                  OSVersion: 11.3
+                  USERTYPEPIPELINE: "@MBB"
+                  TESTTYPEPIPELINE: "@REGRESSION"
+                  UFLTAGPIPELINE: "@3G"
+                  DXIDMPIPELINE: "not@DXIDM"
+                  LOGINPIPELINE: "not@LOGIN"
+                  UNKNOWN: false
+                  SPECIALPIPELINE: "not@Special"
+                  DEVICE_NAME: GooglePixel5
+                  PLATFORM_VERSION: 11.0
+                  Build_Number: MBBnotLOGIN
+                  PLisLiveTest: false
+                MPS_3G_LOGIN:
+                  MSISDN: 447876005681
+                  UFL: 3G
+                  SERVER: qc1
+                  username: NEW_7051070263
+                  accountId: 7051070263
+                  AppVersion: 10.39
+                  SubscriptionType: MPS
+                  Segment: CONSUMER
+                  Reinvent_Server: true
+                  TCC: TCC7
+                  Need_Tcc: true
+                  APIURL: https://mvax.dx-qc1-common.digital.vodafoneaws.co.uk
+                  OSVersion: 11.3
+                  USERTYPEPIPELINE: "@MPS"
+                  TESTTYPEPIPELINE: "@REGRESSION"
+                  UFLTAGPIPELINE: "@3G"
+                  DXIDMPIPELINE: "not@DXIDM"
+                  LOGINPIPELINE: "@LOGIN"
+                  UNKNOWN: false
+                  SPECIALPIPELINE: "not@Special"
+                  DEVICE_NAME: SamsungGalaxyS22Ultra
+                  PLATFORM_VERSION: 12.0
+                  Build_Number: MPSLOGIN
+                  PLisLiveTest: false
+              maxParallel: 1
+            workspace:
+              clean: all
+            condition: eq(variables['Build.Reason'], 'Schedule')
+            timeoutInMinutes: 200
+            displayName: Android Run
+            steps:
+              - checkout: self
+                fetchDepth: 1
+                clean: true
+              - task: NodeTool@0
+                displayName: Setup Node
+                inputs:
+                  versionSpec: 10.x
+              - task: Bash@3
+                displayName: Setup Bash Script
+                inputs:
+                  targetType: inline
+                  script: >-
+                    npm install -g appium@1.19.1
+
+                    npm install wd
+
+                    appium&
+
+                    npm install -g allure-commandline
+
+                    npm install bestzip -g
+              - task: CmdLine@2
+                displayName: Test Run
+                inputs:
+                  script: >
+                    echo "$(AppVersion)"
+
+                    mvn clean install-Dcucumber.filter.tags="$(TESTTYPEPIPELINE)and$(USERTYPEPIPELINE)and$(UFLTAGPIPELINE)and$(LOGINPIPELINE)and$(DXIDMPIPELINE)and$(SPECIALPIPELINE)"-DSERVER="$(SERVER)"-DPLATFORM="Android"-DMSISDN="$(MSISDN)"-DUFL="$(UFL)"-DREMOTE="false"-Durl="$(APIURL)"-Dusername="$(username)"-DaccountId="$(accountId)"-DLOA3AccountId="$(accountId)"-DSubscriptionType="$(SubscriptionType)"-DSegment="$(Segment)"-DReinventServer="$(ReinventServer)"-DTCC="$(TCC)"-DNeedTcc="$(NeedTcc)"-DAppVersion="$(AppVersion)"-DOSVersion="$(OSVersion)"-DUnknownUser="$(UNKNOWN)"-DDEVICE_NAME="$(DEVICE_NAME)"-DPLATFORM_VERSION="$(PLATFORM_VERSION)"-DbrowserStackRun="True"-DbrowserStackUserName="yarahelal_XQJnIN"-DbrowserStackAccessKey="R9vAwdw5zpizUCRi2zVq"-DappUrl="bs://9e7932d3b65c1bd0c03a97b679aadd618ba77986"-DbuildName="ScheduledrunAndroid39"-Dpassword="testing1"-DbuildNumber="$(Build_Number)" -DisLiveTest="$(PLisLiveTest)"
+
+              - task: PublishTestResults@2
+                inputs:
+                  testResultsFormat: 'JUnit'
+                  testResultsFiles: 'Cucumber.xml'
+                  searchFolder: '$(System.DefaultWorkingDirectory)'
+                  testRunTitle: 'MVA App Automation Run'
+                  publishRunAttachments: true
+                  failTaskOnFailedTests: true
+
+
+stages:
+  - stage:
+    jobs:
+      - job: envCheck
+        strategy:
+          matrix:
+            EnvCheck-INT1:
+              MSISDN: 447879004897
+              UFL: 3G
+              SERVER: int1
+              username: AUTOMATION1402948090
+              accountId: 7051444318
+              AppVersion: 10.43
+              SubscriptionType: MPS
+              Segment: CONSUMER
+              Reinvent_Server: false
+              TCC: TCC6
+              Need_Tcc: false
+              APIURL: https://mvax.dx-int1-common.digital.vodafoneaws.co.uk
+              OSVersion: 12.0
+              UNKNOWN: false
+              DEVICE_NAME: Google Pixel 7
+              PLATFORM_VERSION: 13.0
+              Build_Number: int1
+              PLisLiveTest: false
+            EnvCheck-QC1:
+              MSISDN: 447879279577
+              UFL: 3G
+              SERVER: qc1
+              username: 1161551827
+              accountId: 7001267633
+              AppVersion: 10.43
+              SubscriptionType: MPS
+              Segment: CONSUMER
+              Reinvent_Server: false
+              TCC: TCC7
+              Need_Tcc: false
+              APIURL: https://mvax.dx-qc1-common.digital.vodafoneaws.co.uk
+              OSVersion: 9
+              UNKNOWN: false
+              DEVICE_NAME: Google Pixel 3
+              PLATFORM_VERSION: 9.0
+              Build_Number: qc1
+              PLisLiveTest: false
+            EnvCheck-QC2:
+              MSISDN: 447867602837
+              UFL: 3G
+              SERVER: qc2
+              username: AUTOMATION123717122
+              accountId: 7051396926
+              AppVersion: 10.43
+              SubscriptionType: MPS
+              Segment: CONSUMER
+              Reinvent_Server: false
+              TCC: TCC8
+              Need_Tcc: false
+              APIURL: https://mvax.dx-qc2-common.digital.vodafoneaws.co.uk
+              OSVersion: 9
+              UNKNOWN: false
+              DEVICE_NAME: Google Pixel 5
+              PLATFORM_VERSION: 12.0
+              Build_Number: qc2
+              PLisLiveTest: false
+            EnvCheck-QCX:
+              MSISDN: 447879279577
+              UFL: 3G
+              SERVER: qcx
+              username: 1161551827
+              accountId: 7001267633
+              AppVersion: 10.43
+              SubscriptionType: MPS
+              Segment: CONSUMER
+              Reinvent_Server: false
+              TCC: TCC6
+              Need_Tcc: false
+              APIURL: https://mvax.dx-qcx-common.digital.vodafoneaws.co.uk
+              OSVersion: 9
+              UNKNOWN: false
+              DEVICE_NAME: Google Pixel 3
+              PLATFORM_VERSION: 10.0
+              Build_Number: qcx
+              PLisLiveTest: false
+            EnvCheck-PRODSUP:
+              MSISDN: 447867611145
+              UFL: 3G
+              SERVER: prodsup
+              username: AUTOMATION0011788
+              accountId: 7000809346
+              AppVersion: 10.43
+              SubscriptionType: MPS
+              Segment: CONSUMER
+              Reinvent_Server: true
+              TCC: TCC9
+              Need_Tcc: true
+              APIURL: https://mvax.dx-prodsup-common.digital.vodafoneaws.co.uk
+              OSVersion: 9
+              UNKNOWN: false
+              DEVICE_NAME: Google Pixel 6 Pro
+              PLATFORM_VERSION: 13.0
+              Build_Number: prodsup
+              PLisLiveTest: false
+          maxParallel: 1
+        workspace:
+          clean: all
+        condition: eq(variables['Build.Reason'], 'Schedule')
+        timeoutInMinutes: 200
+        displayName: Android Run
+        steps:
+          - checkout: self
+            fetchDepth: 1
+            clean: true
+          - task: NodeTool@0
+            displayName: Setup Node
+            inputs:
+              versionSpec: 10.x
+          - task: Bash@3
+            displayName: Setup Bash Script
+            inputs:
+              targetType: inline
+              script: >-
+                npm install -g appium@1.19.1
+
+                npm install wd
+
+                appium&
+
+                npm install -g allure-commandline
+
+                npm install bestzip -g
+          - task: CmdLine@2
+            displayName: Test Run
+            inputs:
+              script: >
+                echo "$(AppVersion)"
+
+                mvn clean install -Dcucumber.filter.tags=@EnvChecks -DSERVER="$(SERVER)" -DPLATFORM="Android" -DMSISDN="$(MSISDN)" -DUFL="$(UFL)" -DREMOTE="false" -Durl="$(APIURL)" -Dusername="$(username)" -DaccountId="$(accountId)" -DLOA3AccountId="$(accountId)" -DSubscriptionType="$(SubscriptionType)" -DSegment="$(Segment)" -DReinventServer="$(ReinventServer)" -DTCC="$(TCC)" -DNeedTcc="$(NeedTcc)" -DAppVersion="$(AppVersion)" -DOSVersion="$(OSVersion)" -DUnknownUser="$(UNKNOWN)" -DDEVICE_NAME="$(DEVICE_NAME)" -DPLATFORM_VERSION="$(PLATFORM_VERSION)" -DbrowserStackRun="True" -DbrowserStackUserName="yarahelal_XQJnIN" -DbrowserStackAccessKey="R9vAwdw5zpizUCRi2zVq" -DappUrl="bs://76ffb47c250863402512720e9523726f27e9de9a" -DbuildName="Scheduled env chck run" -Dpassword="testing1" -DbuildNumber="$(Build_Number)" -DisLiveTest="$(PLisLiveTest)"
+
+
+          - task: PublishTestResults@2
+            inputs:
+              testResultsFormat: 'JUnit'
+              testResultsFiles: 'Cucumber.xml'
+              searchFolder: '$(System.DefaultWorkingDirectory)'
+              testRunTitle: 'MVA App Automation Run'
+              publishRunAttachments: true
+              failTaskOnFailedTests: true
+
+          - task: PowerShell@2
+            inputs:
+              targetType: 'inline'
+              script: |
+                 $myTeamsWebHook = “https://vodafone.webhook.office.com/webhookb2/4b23d8c8-e5e2-4935-afe9-368b6b0f16ae@68283f3b-8487-4c86-adb3-a5228f18b893/IncomingWebhook/27dec17ecfe94974b880260e8c07fc66/285dcd38-f1ee-4d88-8282-0777915167c4”
+                 Invoke-RestMethod -Method post -ContentType 'Application/Json' -Body '{"text":"$(SERVER) is working fine"}' -Uri $myTeamsWebHook
+            condition: Succeeded()
+
+          - task: PowerShell@2
+            inputs:
+              targetType: 'inline'
+              script: |
+                 $myTeamsWebHook = “https://vodafone.webhook.office.com/webhookb2/4b23d8c8-e5e2-4935-afe9-368b6b0f16ae@68283f3b-8487-4c86-adb3-a5228f18b893/IncomingWebhook/27dec17ecfe94974b880260e8c07fc66/285dcd38-f1ee-4d88-8282-0777915167c4”
+                 Invoke-RestMethod -Method post -ContentType 'Application/Json' -Body '{"text":"$(SERVER) is Down/Partially Failing"}' -Uri $myTeamsWebHook
+            condition: Failed()
+
+
+schedules:
+  - cron: "50 12 * * *"
+    displayName: Daily Morning Run
+    target: envCheck
+    branches:
+      include:
+        - EnvironmentChecks2
